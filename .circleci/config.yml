@@ -108,15 +108,21 @@ workflows:
       - build:
           requires:
             - dependencies
-      - test:
-          requires:
-            - dependencies
-          filters:
-            branches:
-              ignore: master
-      - perf:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
+      # - test:
+      #     requires:
+      #       - dependencies
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - perf:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - deploy:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
