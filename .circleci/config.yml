@@ -1,0 +1,128 @@
+version: 2.1
+commands:
+  yarn-install:
+    description: Run Yarn Install
+    steps:
+      - run:
+          name: Yarn Install
+          command: yarn install
+  yarn-build:
+    description: Run Yarn Build
+    steps:
+      - run:
+          name: Yarn Build
+          command: yarn build
+  yarn-test:
+    description: Run Yarn Test
+    steps:
+      - run:
+          name: Yarn Test
+          command: yarn test
+  firebase-deploy:
+    description: Deploy to Firebase
+    parameters:
+      token:
+        type: string
+        description: Firebase Deploy Token
+      alias:
+        type: string
+        default: "default"
+        description: Firebase project alias to deploy to
+    steps:
+      - run:
+          name: Install Firebase Tools
+          command: npm install --prefix=./firebase-deploy firebase-tools
+      - run:
+          name: Deploy to Firebase
+          command: ./firebase-deploy/node_modules/.bin/firebase deploy --token=<< parameters.token >> -P << parameters.alias >>
+  lighthouse-test:
+    description: Run Lighthouse
+    steps:
+      - run:
+          name: Install Lighthouse-ci
+          command: sudo npm install -g @lhci/cli@0.3.x
+      - run:
+          name: Lighthouse Tests
+          command: lhci autorun
+
+jobs:
+  dependencies:
+    docker:
+      - image: "circleci/node:lts"
+    working_directory: ~/project
+    steps:
+      - checkout
+      - restore_cache:
+          key: 'v1.1-yarn-{{ checksum "yarn.lock" }}'
+      - yarn-install
+      - save_cache:
+          key: 'v1.1-yarn-{{ checksum "yarn.lock" }}'
+          paths:
+            - ./node_modules
+  build:
+    docker:
+      - image: "circleci/node:lts"
+    working_directory: ~/project
+    steps:
+      - checkout
+      - restore_cache:
+          key: 'v1.1-yarn-{{ checksum "yarn.lock" }}'
+      - yarn-build
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - public
+            - firebase.json
+            - .firebaserc
+            - .lighthouserc.json
+  test:
+    docker:
+      - image: "circleci/node:lts"
+    working_directory: ~/project
+    steps:
+      - checkout
+      - restore_cache:
+          key: 'v1.1-yarn-{{ checksum "yarn.lock" }}'
+      - yarn-test
+  perf:
+    docker:
+      - image: "circleci/node:lts-browsers"
+    working_directory: ~/project
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - lighthouse-test
+  deploy:
+    docker:
+      - image: "circleci/node:lts"
+    working_directory: ~/project
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - firebase-deploy:
+          token: $FIREBASE_DEPLOY_TOKEN
+workflows:
+  build-and-deploy:
+    jobs:
+      - dependencies
+      - build:
+          requires:
+            - dependencies
+      # - test:
+      #     requires:
+      #       - dependencies
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - perf:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - deploy:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
