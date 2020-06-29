@@ -1,11 +1,27 @@
+require("dotenv").config();
+
 module.exports = {
   siteMetadata: {
-    title: `Gatsby Default Starter`,
-    description: `Kick off your next, great Gatsby project with this default starter. This barebones starter ships with the main Gatsby configuration files you might need.`,
-    author: `@gatsbyjs`,
+    title: `Typescript Sanity Gatsby Site`,
+    description: `Gatsby project with this Typescript and Sanity.`,
+    author: `@cbrannen9a`,
   },
   plugins: [
     `gatsby-plugin-react-helmet`,
+    {
+      resolve: `gatsby-source-sanity`,
+      options: {
+        projectId: process.env.GATSBY_SANITY_PROJECTID,
+        dataset: process.env.GATSBY_SANITY_DATASET,
+        // a token with read permissions is required
+        // if you have a private dataset
+        token: process.env.GATSBY_SANITY_TOKEN,
+
+        // If the Sanity GraphQL API was deployed using `--tag <name>`,
+        // use `graphqlTag` to specify the tag name. Defaults to `default`.
+        graphqlTag: "default",
+      },
+    },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -18,7 +34,7 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `gatsby-starter-default`,
+        name: `typescript-sanity-gatsby-site`,
         short_name: `starter`,
         start_url: `/`,
         background_color: `#663399`,
@@ -31,4 +47,4 @@ module.exports = {
     // To learn more, visit: https://gatsby.dev/offline
     // `gatsby-plugin-offline`,
   ],
-}
+};
